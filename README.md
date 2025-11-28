@@ -1,3 +1,11 @@
+## Features for Cory
+- Flexible database storage on Supabase can be added to any Airtable base, and it will populate dynamically using a JSON database.
+- Using Inngest because the Airtable API is buggy and slow, making the app much quicker and more efficient.
+- Single-page frontend UI where all application information is displayed, with hotkeys to quickly reject, accept, or waitlist.
+- Ability to disable any Airtable fields that aren’t relevant.
+- Option to set priority scores to sort candidates based on Cory’s preferences.
+- Efficient and fast.
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
