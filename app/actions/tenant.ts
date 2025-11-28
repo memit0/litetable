@@ -4,8 +4,10 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { tenants, fieldMappings, priorityConfigs } from "@/db/schema";
 import { AirtableClient } from "@/lib/airtable";
+import { inngest } from "@/lib/inngest/client";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 
 const connectSchema = z.object({
@@ -138,7 +140,35 @@ export async function enableSync(tenantId: string) {
     const session = await auth();
     if (!session?.user?.id) throw new Error("Unauthorized");
 
-    await db.update(tenants).set({ syncEnabled: true }).where(eq(tenants.id, tenantId));
+    console.log("[enableSync] Starting sync enable for tenant:", tenantId);
     
-    // Ideally trigger initial sync immediately via Inngest
+    await db.update(tenants).set({ syncEnabled: true }).where(eq(tenants.id, tenantId));
+    console.log("[enableSync] Tenant sync enabled in database");
+    
+    // Trigger initial sync immediately via Inngest
+    // This sends an event to the Inngest queue, which will be picked up by the syncTenant function
+    try {
+        console.log("[enableSync] Sending Inngest event: app/sync.tenant with data:", { tenantId });
+        const result = await inngest.send({
+            name: "app/sync.tenant",
+            data: { tenantId },
+        });
+        console.log("[enableSync] Inngest event sent successfully:", result);
+    } catch (error) {
+        console.error("[enableSync] ERROR sending Inngest event:", error);
+        throw error;
+    }
+}
+
+export async function resetTenant() {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+
+  const tenant = await getTenant();
+  if (tenant) {
+    await db.delete(tenants).where(eq(tenants.id, tenant.id));
+  }
+  
+  revalidatePath("/");
+  redirect("/onboarding/connect");
 }

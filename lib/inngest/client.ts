@@ -1,4 +1,6 @@
 import { Inngest } from "inngest";
 
-export const inngest = new Inngest({ id: "litetable" });
+export const inngest = new Inngest({ 
+  id: "litetable",
+});
 

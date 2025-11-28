@@ -1,5 +1,5 @@
 import { getQueue } from "@/app/actions/applications";
-import { getTenant, getFieldMappings } from "@/app/actions/tenant";
+import { getTenant, getFieldMappings, resetTenant } from "@/app/actions/tenant";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,12 +16,13 @@ import { redirect } from "next/navigation";
 export default async function ApplicationsPage({
   searchParams,
 }: {
-  searchParams: { page?: string };
+  searchParams: Promise<{ page?: string }>;
 }) {
   const tenant = await getTenant();
   if (!tenant) redirect("/onboarding/connect");
 
-  const page = Number(searchParams?.page) || 1;
+  const params = await searchParams;
+  const page = Number(params?.page) || 1;
   const applications = await getQueue(tenant.id, page);
   const mappings = await getFieldMappings(tenant.id);
 
@@ -32,8 +33,15 @@ export default async function ApplicationsPage({
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Review Queue</h1>
-        <div className="text-sm text-muted-foreground">
-          Sync Status: {tenant.lastSyncAt ? `Last synced ${new Date(tenant.lastSyncAt).toLocaleTimeString()}` : "Never synced"}
+        <div className="flex items-center gap-4">
+          <div className="text-sm text-muted-foreground">
+            Sync Status: {tenant.lastSyncAt ? `Last synced ${new Date(tenant.lastSyncAt).toLocaleTimeString()}` : "Never synced"}
+          </div>
+          <form action={resetTenant}>
+            <Button variant="destructive" size="sm" type="submit">
+              Restart Process
+            </Button>
+          </form>
         </div>
       </div>
 

@@ -22,21 +22,36 @@ export class AirtableClient {
     } = {}
   ) {
     try {
+      // Build select options, only including defined values
+      const selectOptions: any = {};
+      
+      if (options.filterByFormula) {
+        selectOptions.filterByFormula = options.filterByFormula;
+      }
+      
+      if (options.sort && options.sort.length > 0) {
+        selectOptions.sort = options.sort;
+      }
+      
+      if (options.maxRecords) {
+        selectOptions.maxRecords = options.maxRecords;
+      }
+
+      console.log("[AirtableClient] Fetching records with options:", selectOptions);
+      
       const records = await this.base(tableId)
-        .select({
-          filterByFormula: options.filterByFormula,
-          sort: options.sort,
-          maxRecords: options.maxRecords,
-        })
+        .select(selectOptions)
         .all();
+
+      console.log("[AirtableClient] Successfully fetched", records.length, "records");
 
       return records.map((record) => ({
         id: record.id,
         fields: record.fields,
-        createdTime: record._raw.createdTime,
+        createdTime: record._rawJson?.createdTime || new Date().toISOString(),
       }));
     } catch (error) {
-      console.error("Error fetching records from Airtable:", error);
+      console.error("[AirtableClient] Error fetching records from Airtable:", error);
       throw error;
     }
   }
