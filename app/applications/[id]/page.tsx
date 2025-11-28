@@ -6,12 +6,13 @@ import { ApplicationDetail } from "@/components/application/detail-view";
 export default async function ApplicationDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = await params;
   const tenant = await getTenant();
   if (!tenant) redirect("/onboarding/connect");
 
-  const application = await getApplication(params.id);
+  const application = await getApplication(id);
   if (!application) redirect("/applications");
 
   const mappings = await getFieldMappings(tenant.id);
